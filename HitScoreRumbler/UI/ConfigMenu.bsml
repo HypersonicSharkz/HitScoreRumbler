@@ -1,0 +1,59 @@
+﻿<settings-container xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:noNamespaceSchemaLocation='https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd'>
+  <modifier-container child-control-height='false' spacing="1" >
+    <checkbox-setting apply-on-change="true" value="Enabled" text="Enable Mod"
+            hover-hint="Enables/Disables the mod"
+					/>
+    <slider-setting apply-on-change="true" value="StrengthMultiplier" text="Rumble Strength" min='0' max='12' increment='0.1'
+						hover-hint="Base rumble strength, default = 1.2"
+					/>
+    <slider-setting apply-on-change="true" value="DurationMultiplier" text="Rumble Duration" min='0' max='12' increment='0.1'
+        hover-hint="Rumble Duration Multilier, default = 1"
+					/>
+
+    <horizontal spacing="-25">
+      <vertical spacing='-0.2'>
+        <label text='1.0'/>
+        <label text='0.8'/>
+        <label text='0.6'/>
+        <label text='0.4'/>
+        <label text='0.2'/>
+        <label text='0.0'/>
+      </vertical>
+      <vertical pad-top='3' pad-left='2'>
+        <horizontal horizontal-fit='PreferredSize' child-expand-width='false' pref-width='60' pref-height='40'>
+
+          <clickable-image src="HitScoreRumbler.Properties.Grid.png" id="Graph"
+        />
+        </horizontal>
+        <horizontal spacing='5.55' >
+          <horizontal pref-width='3'>
+            <label text='15' align='Center'/>
+          </horizontal>
+          <horizontal pref-width='3'>
+            <label text='13' align='Center'/>
+          </horizontal>
+          <horizontal pref-width='3'>
+            <label text='11' align='Center'/>
+          </horizontal>
+          <horizontal pref-width='3'>
+            <label text='9' align='Center'/>
+          </horizontal>
+          <horizontal pref-width='3'>
+            <label text='7' align='Center'/>
+          </horizontal>
+          <horizontal pref-width='3'>
+            <label text='5' align='Center'/>
+          </horizontal>
+          <horizontal pref-width='3'>
+            <label text='3' align='Center'/>
+          </horizontal>
+          <horizontal pref-width='3'>
+            <label text='1' align='Center'/>
+          </horizontal>
+        </horizontal>
+      </vertical>
+
+    </horizontal>
+
+  </modifier-container>
+</settings-container>
