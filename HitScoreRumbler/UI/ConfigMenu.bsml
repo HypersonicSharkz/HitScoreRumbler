@@ -22,8 +22,7 @@
       <vertical pad-top='3' pad-left='2'>
         <horizontal horizontal-fit='PreferredSize' child-expand-width='false' pref-width='60' pref-height='40'>
 
-          <clickable-image src="HitScoreRumbler.Properties.Grid.png" id="Graph"
-        />
+          <clickable-image src="HitScoreRumbler.Properties.Grid.png" id="Graph"/>
         </horizontal>
         <horizontal spacing='5.55' >
           <horizontal pref-width='3'>

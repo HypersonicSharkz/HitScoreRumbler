@@ -1,9 +1,14 @@
 ﻿using BeatSaberMarkupLanguage;
+using BeatSaberMarkupLanguage.GameplaySetup;
 using BeatSaberMarkupLanguage.MenuButtons;
 using HarmonyLib;
+using HitScoreRumbler.UI;
 using IPA;
 using IPA.Config.Stores;
+using SiraUtil.Zenject;
 using System.Reflection;
+using UnityEngine;
+using Zenject;
 using IPALogger = IPA.Logging.Logger;
 
 namespace HitScoreRumbler
@@ -16,19 +21,15 @@ namespace HitScoreRumbler
         internal static Plugin Instance { get; private set; }
         internal static IPALogger Log { get; private set; }
 
-        private MenuButton MenuButton = new MenuButton("Hit Score Rumbler", "Hit Score Rumbler", OnMenuButtonClick);
-
-        private UI.ConfigFlowCoordinator _configViewFlowCoordinator;
-
-
         [Init]
-        /// <summary>
-        /// Called when the plugin is first loaded by IPA (either when the game starts or when the plugin is enabled if it starts disabled).
-        /// [Init] methods that use a Constructor or called before regular methods like InitWithConfig.
-        /// Only use [Init] with one Constructor.
-        /// </summary>
-        public void Init(IPALogger logger, IPA.Config.Config conf)
+        public void Init(IPALogger logger, IPA.Config.Config conf, Zenjector zenject)
         {
+            zenject.UseLogger(logger);
+            zenject.Install(Location.Menu, container =>
+            {
+                container.BindInterfacesAndSelfTo<ConfigMenuController>().FromNewComponentOnRoot().AsSingle();
+            });
+
             Configuration.PluginConfig.Instance = conf.Generated<Configuration.PluginConfig>();
             Instance = this;
             Log = logger;
@@ -36,20 +37,10 @@ namespace HitScoreRumbler
             harmony = new Harmony("HypersonicSharkz.BeatSaber.HitScoreRumbler");
         }
 
-        [OnStart]
+        [OnStart] 
         public void OnApplicationStart()
         {
             harmony.PatchAll(Assembly.GetExecutingAssembly());
-            MenuButtons.instance.RegisterButton(MenuButton);
-        }
-
-        private static void OnMenuButtonClick()
-        {
-            if (Instance._configViewFlowCoordinator == null)
-            {
-                Instance._configViewFlowCoordinator = BeatSaberUI.CreateFlowCoordinator<UI.ConfigFlowCoordinator>();
-            }
-            BeatSaberUI.MainFlowCoordinator.PresentFlowCoordinator(Instance._configViewFlowCoordinator);
         }
     }
 }

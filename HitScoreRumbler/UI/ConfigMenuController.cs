@@ -1,6 +1,7 @@
 ﻿using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.Components;
+using BeatSaberMarkupLanguage.GameplaySetup;
 using BeatSaberMarkupLanguage.ViewControllers;
 using HitScoreRumbler.Configuration;
 using HitScoreRumbler.HarmonyPatches;
@@ -13,12 +14,13 @@ using System.Security.Policy;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.XR;
+using Zenject;
 
 namespace HitScoreRumbler.UI
 {
     [HotReload(RelativePathToLayout = @"ConfigMenu.bsml")]
     [ViewDefinition("HitScoreRumbler.UI.ConfigMenu.bsml")]
-    internal class ConfigMenuController : BSMLAutomaticViewController
+    internal class ConfigMenuController : NotifiableSingleton<ConfigMenuController>, IInitializable, ITickable
     {
         private static HapticFeedbackController hapticFeedbackController = null;
         private static PluginConfig Config => PluginConfig.Instance;
@@ -46,16 +48,15 @@ namespace HitScoreRumbler.UI
 
         [UIComponent("Graph")]
         private ClickableImage GraphImage;
+        private bool initialized;
 
-        protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
+        private void SetUp()
         {
-            base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
-
             hapticFeedbackController = FindObjectOfType<HapticFeedbackController>();
 
             GraphImage.OnClickEvent = delegate (PointerEventData pointerEventData)
             {
-                Vector2 cp = pointerEventData.pointerPressRaycast.worldPosition;
+                Vector2 cp = pointerEventData.pointerPressRaycast.screenPosition;
                 Vector3[] v = new Vector3[4];
                 GraphImage.rectTransform.GetWorldCorners(v);
                 //Get point on graph from (0,0) to (1,1)
@@ -172,6 +173,23 @@ namespace HitScoreRumbler.UI
             texture.LoadImage(ms.ToArray());
             ms.Close();
             return texture;
+        }
+
+        public void Initialize()
+        {
+            GameplaySetup.instance.AddTab("Hit Score Rumbler", "HitScoreRumbler.UI.ConfigMenu.bsml", this);
+        }
+
+        public void Tick()
+        {
+            if (initialized)
+                return;
+
+            if (GraphImage == null)
+                return;
+
+            SetUp();
+            initialized = true;
         }
     }
 }

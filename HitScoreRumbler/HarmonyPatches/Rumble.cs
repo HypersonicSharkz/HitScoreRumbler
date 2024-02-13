@@ -2,7 +2,6 @@
 using HitScoreRumbler.Configuration;
 using HitScoreRumbler.Utils;
 using Libraries.HM.HMLib.VR;
-using System.Linq;
 using UnityEngine;
 
 namespace HitScoreRumbler.HarmonyPatches
