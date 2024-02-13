@@ -123,6 +123,7 @@
     </Compile>
     <Compile Include="UI\ConfigFlowCoordinator.cs" />
     <Compile Include="UI\ConfigMenuController.cs" />
+    <Compile Include="Utils\Helper.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="manifest.json" />

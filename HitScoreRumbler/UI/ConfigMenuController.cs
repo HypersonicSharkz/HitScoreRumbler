@@ -63,10 +63,7 @@ namespace HitScoreRumbler.UI
                 Vector2 p = FitVectorToGrid(new Vector2(
                     (cp.x - v[0].x) / (v[2].x - v[0].x),
                     (cp.y - v[0].y) / (v[2].y - v[0].y)
-                    ));
-
-
-                Plugin.Log.Info("POS: " + p);
+                    ), 28, 20);
 
                 bool add = true;
 
@@ -95,9 +92,8 @@ namespace HitScoreRumbler.UI
 
         private void PreviewRumble(Vector2 p)
         {
-            Rumble.normalPreset._duration = 0.14f * PluginConfig.Instance.DurationMultiplier;
+            Rumble.normalPreset._duration = 0.5f;
             Rumble.normalPreset._strength = p.y * PluginConfig.Instance.StrengthMultiplier;
-            CutEffect.distanceToCenter = 0;
 
             hapticFeedbackController.PlayHapticFeedback(XRNode.RightHand, Rumble.normalPreset);
             hapticFeedbackController.PlayHapticFeedback(XRNode.LeftHand, Rumble.normalPreset);
@@ -155,10 +151,10 @@ namespace HitScoreRumbler.UI
             GraphImage.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
         }
 
-        Vector2 FitVectorToGrid(Vector2 vector)
+        Vector2 FitVectorToGrid(Vector2 vector, int gridX, int gridY)
         {
-            float roundedX = Mathf.Round((vector.x) * 28) / 28f;
-            float roundedY = Mathf.Round((vector.y) * 20) / 20;
+            float roundedX = Mathf.Round((vector.x) * gridX) / gridX;
+            float roundedY = Mathf.Round((vector.y) * gridY) / gridY;
             return new Vector2(roundedX, roundedY);
         }
 
