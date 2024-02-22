@@ -1,9 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using IPA.Config.Data;
 using IPA.Config.Stores;
 using IPA.Config.Stores.Attributes;
 using IPA.Config.Stores.Converters;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json;
 using UnityEngine;
+using System.Drawing;
 
 [assembly: InternalsVisibleTo(GeneratedStore.AssemblyVisibilityTarget)]
 namespace HitScoreRumbler.Configuration
@@ -12,12 +16,10 @@ namespace HitScoreRumbler.Configuration
     {
         public static PluginConfig Instance { get; set; }
         public virtual bool Enabled { get; set; } = true;
-        public virtual float StrengthMultiplier { get; set; } = 1.2f; // Must be 'virtual' if you want BSIPA to detect a value change and save the config automatically.
-        public virtual float DurationMultiplier { get; set; } = 1f;
+        public virtual string ChosenPreset { get; set; } = "default";
 
-        [UseConverter(typeof(ListConverter<Vector2>))]
-        public virtual List<Vector2> Points { get; set; } = new List<Vector2>() { new Vector2(0, 0), new Vector2(1, 1) };
-
+        [Ignore]
+        public Preset LoadedPreset {  get; set; }
         /// <summary>
         /// This is called whenever BSIPA reads the config from disk (including when file changes are detected).
         /// </summary>
@@ -41,5 +43,14 @@ namespace HitScoreRumbler.Configuration
         {
             // This instance's members populated from other
         }
+    }
+
+    public class Preset
+    {
+        public float StrengthMultiplier { get; set; } = 1.2f;
+        public float DurationMultiplier { get; set; } = 1f;
+
+        [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
+        public List<PointF> Points { get; set; } = new List<PointF>() { new PointF(0, 0), new PointF(1, 1) };
     }
 }

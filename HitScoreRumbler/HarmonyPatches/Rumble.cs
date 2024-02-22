@@ -33,8 +33,8 @@ namespace HitScoreRumbler.HarmonyPatches
             if (!PluginConfig.Instance.Enabled)
                 return true;
 
-            normalPreset._duration = 0.14f * PluginConfig.Instance.DurationMultiplier;
-            normalPreset._strength = Helper.GetStrength(PluginConfig.Instance.Points, PluginConfig.Instance.StrengthMultiplier, CutEffect.distanceToCenter);
+            normalPreset._duration = 0.14f * PluginConfig.Instance.LoadedPreset.DurationMultiplier;
+            normalPreset._strength = Helper.GetStrength(PluginConfig.Instance.LoadedPreset.Points, PluginConfig.Instance.LoadedPreset.StrengthMultiplier, CutEffect.distanceToCenter);
             CutEffect.distanceToCenter = 0;
 
             ____hapticFeedbackController.PlayHapticFeedback(saberType.Node(), normalPreset);

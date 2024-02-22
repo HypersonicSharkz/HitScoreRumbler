@@ -1,12 +1,18 @@
 ﻿using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.Components;
+using BeatSaberMarkupLanguage.Components.Settings;
 using BeatSaberMarkupLanguage.GameplaySetup;
+using BeatSaberMarkupLanguage.Parser;
 using BeatSaberMarkupLanguage.ViewControllers;
 using HitScoreRumbler.Configuration;
 using HitScoreRumbler.HarmonyPatches;
+using HitScoreRumbler.Utils;
+using HMUI;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -20,23 +26,40 @@ namespace HitScoreRumbler.UI
 {
     [HotReload(RelativePathToLayout = @"ConfigMenu.bsml")]
     [ViewDefinition("HitScoreRumbler.UI.ConfigMenu.bsml")]
-    internal class ConfigMenuController : NotifiableSingleton<ConfigMenuController>, IInitializable, ITickable
+    internal class ConfigMenuController : IInitializable, INotifyPropertyChanged, IDisposable
     {
-        private static HapticFeedbackController hapticFeedbackController = null;
+        [Inject]
+        private HapticFeedbackController hapticFeedbackController;
+
         private static PluginConfig Config => PluginConfig.Instance;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        #region BSML Fields
+
+        [UIParams]
+        private readonly BSMLParserParams parserParams;
 
         [UIValue("StrengthMultiplier")]
         private float StrengthMultiplier
         {
-            get => Config.StrengthMultiplier;
-            set => Config.StrengthMultiplier = value;
+            get => Config.LoadedPreset.StrengthMultiplier;
+            set
+            {
+                Config.LoadedPreset.StrengthMultiplier = value;
+                PresetHelper.SavePreset(Config.LoadedPreset, Config.ChosenPreset);
+            }
         }
 
         [UIValue("DurationMultiplier")]
         private float DurationMultiplier
         {
-            get => Config.DurationMultiplier;
-            set => Config.DurationMultiplier = value;
+            get => Config.LoadedPreset.DurationMultiplier;
+            set 
+            { 
+                Config.LoadedPreset.DurationMultiplier = value;
+                PresetHelper.SavePreset(Config.LoadedPreset, Config.ChosenPreset);
+            }
         }
 
         [UIValue("Enabled")]
@@ -46,55 +69,141 @@ namespace HitScoreRumbler.UI
             set => Config.Enabled = value;
         }
 
+        [UIComponent("PresetsDropDown")]
+        private DropDownListSetting dropDown;
+
+        [UIValue("PresetList")]
+        private List<object> presets = PresetHelper.GetAllPresets().Cast<object>().ToList();
+
+        [UIValue("PresetChoice")]
+        private string presetChoice
+        {
+            get => Config.ChosenPreset;
+            set
+            {
+                Config.ChosenPreset = value;
+                Preset preset = PresetHelper.GetPreset(value);
+                Config.LoadedPreset = preset;
+                NotifyPropertyChanged(nameof(DurationMultiplier));
+                NotifyPropertyChanged(nameof(StrengthMultiplier));
+                NotifyPropertyChanged(nameof(CanRemove));
+                UpdateGrid();
+            }
+        }
+
         [UIComponent("Graph")]
         private ClickableImage GraphImage;
-        private bool initialized;
+
+        [UIAction("AddProfileClick")]
+        private void addProfile()
+        {
+            KeyboardText = "New Profile";
+
+            parserParams.EmitEvent("close-keyboard");
+            parserParams.EmitEvent("open-keyboard");
+        }
+
+        [UIAction("RemoveProfileClick")]
+        private void removeProfile()
+        {
+            if (!CanRemove)
+                return;
+
+            presets.Remove(Config.ChosenPreset);
+            PresetHelper.RemovePreset(Config.ChosenPreset);
+            presetChoice = (string)presets[0];
+
+            NotifyPropertyChanged(nameof(presetChoice));
+
+            dropDown.UpdateChoices();
+        }
+
+        [UIAction("keyboard-enter")]
+        private void KeyboardEnter(string keyboardText)
+        {
+            //Create new preset
+            if (presets.Contains(keyboardText)) 
+                return;
+
+            Preset preset = new Preset();
+            PresetHelper.SavePreset(preset, keyboardText);
+            presets.Add(keyboardText);
+
+            presetChoice = keyboardText;
+            NotifyPropertyChanged(nameof(presetChoice));
+
+            dropDown.UpdateChoices();
+        }
+
+        [UIValue("keyboard-text")]
+        private string KeyboardText;
+
+        [UIValue("canRemove")]
+        private bool CanRemove => Config.ChosenPreset != "default";
+
+        [UIAction("#post-parse")]
+        private void PostParse()
+        {
+            SetUp();
+        }
+
+
+        #endregion
+
+        private void NotifyPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
 
         private void SetUp()
         {
-            hapticFeedbackController = FindObjectOfType<HapticFeedbackController>();
-
-            GraphImage.OnClickEvent = delegate (PointerEventData pointerEventData)
-            {
-                Vector2 cp = pointerEventData.pointerPressRaycast.screenPosition;
-                Vector3[] v = new Vector3[4];
-                GraphImage.rectTransform.GetWorldCorners(v);
-                //Get point on graph from (0,0) to (1,1)
-                //Top right being (1,1), bottom left being (0,0)
-                Vector2 p = FitVectorToGrid(new Vector2(
-                    (cp.x - v[0].x) / (v[2].x - v[0].x),
-                    (cp.y - v[0].y) / (v[2].y - v[0].y)
-                    ), 28, 20);
-
-                bool add = true;
-
-                foreach (Vector2 vector2 in Config.Points)
-                {
-                    if (EqualsRound(vector2.x, p.x))
-                    {
-                        Config.Points.Remove(vector2);
-                        if (EqualsRound(vector2.y, p.y))
-                            add = false;
-                        break;
-                    }
-                }
-
-                if (add)
-                {
-                    Config.Points.Add(p);
-                    PreviewRumble(p);
-                }
-
-                UpdateGrid();
-            };
+            GraphImage.OnClickEvent = GraphClicked;
 
             UpdateGrid();
+
+            Plugin.Log.Info("HitScore Rumbler Setup");
+        }
+
+        private void GraphClicked(PointerEventData pointerEventData)
+        {
+            Vector2 cp = pointerEventData.pointerPressRaycast.screenPosition;
+            Vector3[] v = new Vector3[4];
+            GraphImage.rectTransform.GetWorldCorners(v);
+            //Get point on graph from (0,0) to (1,1)
+            //Top right being (1,1), bottom left being (0,0)
+            Vector2 p = FitVectorToGrid(new Vector2(
+                (cp.x - v[0].x) / (v[2].x - v[0].x),
+                (cp.y - v[0].y) / (v[2].y - v[0].y)
+                ), 28, 20);
+
+            bool add = true;
+
+            foreach (PointF vector2 in Config.LoadedPreset.Points)
+            {
+                if (EqualsRound(vector2.X, p.x))
+                {
+                    Config.LoadedPreset.Points.Remove(vector2);
+                    if (EqualsRound(vector2.Y, p.y))
+                        add = false;
+                    break;
+                }
+            }
+
+            if (add)
+            {
+                Config.LoadedPreset.Points.Add(new PointF(p.x, p.y));
+                PreviewRumble(p);
+            }
+
+            UpdateGrid();
+
+            PresetHelper.SavePreset(Config.LoadedPreset, Config.ChosenPreset);
         }
 
         private void PreviewRumble(Vector2 p)
         {
             Rumble.normalPreset._duration = 0.5f;
-            Rumble.normalPreset._strength = p.y * PluginConfig.Instance.StrengthMultiplier;
+            Rumble.normalPreset._strength = p.y * PluginConfig.Instance.LoadedPreset.StrengthMultiplier;
 
             hapticFeedbackController.PlayHapticFeedback(XRNode.RightHand, Rumble.normalPreset);
             hapticFeedbackController.PlayHapticFeedback(XRNode.LeftHand, Rumble.normalPreset);
@@ -102,7 +211,7 @@ namespace HitScoreRumbler.UI
 
         private void UpdateGrid()
         {
-            Config.Points = Config.Points.OrderBy(pt => pt.x).ToList();
+            Config.LoadedPreset.Points = Config.LoadedPreset.Points.OrderBy(pt => pt.X).ToList();
 
             //Somehow generate image with those points
 
@@ -117,14 +226,14 @@ namespace HitScoreRumbler.UI
                 float circleRadius = 16f;
                 float lineSize = 6f;
 
-                Point[] dots = new Point[Config.Points.Count];
+                Point[] dots = new Point[Config.LoadedPreset.Points.Count];
                 // Draw circles on the bitmap based on the points
                 int i = 0;
-                foreach (Vector2 point in Config.Points)
+                foreach (PointF point in Config.LoadedPreset.Points)
                 {
                     // Calculate the position of the circle's top-left corner
-                    int x = (int)(point.x * bitmap.Width - circleRadius);
-                    int y = (int)(bitmap.Height - point.y * bitmap.Height - circleRadius);
+                    int x = (int)(point.X * bitmap.Width - circleRadius);
+                    int y = (int)(bitmap.Height - point.Y * bitmap.Height - circleRadius);
                     dots[i] = new Point((int)(x + circleRadius), (int)(y + circleRadius));
 
                     // Draw a circle with specified center and radius
@@ -180,16 +289,12 @@ namespace HitScoreRumbler.UI
             GameplaySetup.instance.AddTab("Hit Score Rumbler", "HitScoreRumbler.UI.ConfigMenu.bsml", this);
         }
 
-        public void Tick()
+        public void Dispose()
         {
-            if (initialized)
-                return;
-
-            if (GraphImage == null)
-                return;
-
-            SetUp();
-            initialized = true;
+            if (BeatSaberMarkupLanguage.Settings.BSMLSettings.instance != null)
+            {
+                BeatSaberMarkupLanguage.Settings.BSMLSettings.instance.RemoveSettingsMenu(this);
+            }
         }
     }
 }

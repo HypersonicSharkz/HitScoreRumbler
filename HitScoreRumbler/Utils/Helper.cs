@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using UnityEngine;
 
@@ -6,23 +7,23 @@ namespace HitScoreRumbler.Utils
 {
     public static class Helper
     {
-        public static float GetStrength(List<Vector2> points, float strength, float distance)
+        public static float GetStrength(List<PointF> points, float strength, float distance)
         {
-            Vector2 start = points.FirstOrDefault();
-            Vector2 end = points.LastOrDefault();
+            PointF start = points.FirstOrDefault();
+            PointF end = points.LastOrDefault();
 
             if (points.Count < 2)
-                return start.y * strength;
+                return start.Y * strength;
 
-            if (distance <= 0.28f * start.x + 0.01)
-                return start.y * strength;
-            if (distance >= 0.28f * end.x + 0.01)
-                return end.y * strength;
+            if (distance <= 0.28f * start.X + 0.01)
+                return start.Y * strength;
+            if (distance >= 0.28f * end.X + 0.01)
+                return end.Y * strength;
 
             int i = 0;
             foreach (var p in points)
             {
-                float d = p.x * 0.28f + 0.01f;
+                float d = p.X * 0.28f + 0.01f;
                 if (distance < d)
                 {
                     end = p;
@@ -34,11 +35,11 @@ namespace HitScoreRumbler.Utils
                 i++;
             }
 
-            float startDistance = start.x * 0.28f + 0.01f;
-            float endDistance = end.x * 0.28f + 0.01f;
+            float startDistance = start.X * 0.28f + 0.01f;
+            float endDistance = end.X * 0.28f + 0.01f;
             float t = (distance - startDistance) / (endDistance - startDistance);
 
-            return Mathf.Lerp(start.y, end.y, t) * strength;
+            return Mathf.Lerp(start.Y, end.Y, t) * strength;
         }
     }
 }
