@@ -1,8 +1,12 @@
 # Hit Score Rumbler
 A Beat Saber Mod that changes the cut haptics based on the cut distance to the note center
 
-Made this mod originally for making poodles easier to acc.  
-The idea is that rumble will let you know in real time if you are close to the optimal swing path of the poodle, and can help guide you back to the center.
+Made this mod originally for playing poodles
+The idea is that rumble will let you know in real time if you are close to the optimal swing path of the poodle, and can help guide you back to the center of the notes.
+
+> [!WARNING]
+> This mod will not work with any other rumble override mods enabled! If you are using Tweaks55 you can keep the arc and chain rumble settings, however you must set the "Normal Cut Rumble" to 0.  
+> Hit Score Rumbler will not change haptics for arcs or chains!
 
 ## Settings
 
@@ -19,8 +23,10 @@ Haptics are based on the actual cut distance and not the acc points themself
 - **X-Axis**: Cut Accuracy
 - **Y-Axis**: Strength Multiplier
 
-![image](https://github.com/user-attachments/assets/dad97bbd-00e8-4a99-87c0-069c98f99ca0)
+![image](https://github.com/user-attachments/assets/00091ab1-5b9d-4b31-b928-e76dc4d75b6f)
+
 
 Each column corresponds to the range of an acc value.  
-This means that the second column would be 0 rumble for 15, and 0.1 rumble 13.  
-Hitting a 14 would therefore lineary interpret between 0.1 and 0 based on the actual cut distance
+Column 1 corresponds to a multiplier of 0 for every cut of 15
+
+Column 2 corresponds to a multiplier between 0 and 0.1, the closer to a 13 the higher the rumble
