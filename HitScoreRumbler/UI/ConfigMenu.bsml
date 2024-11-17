@@ -20,41 +20,62 @@
     <horizontal spacing="-25">
       <vertical spacing='-0.2'>
         <label text='1.0'/>
-        <label text='0.8'/>
+        <label text='0.8' font-color='#e3e3e3'/>
         <label text='0.6'/>
-        <label text='0.4'/>
+        <label text='0.4' font-color='#e3e3e3'/>
         <label text='0.2'/>
-        <label text='0.0'/>
+        <label text='0.0' font-color='#e3e3e3'/>
       </vertical>
       <vertical pad-top='3' pad-left='2'>
         <horizontal horizontal-fit='PreferredSize' child-expand-width='false' pref-width='60' pref-height='40'>
 
           <clickable-image src="HitScoreRumbler.Properties.Grid.png" id="Graph"/>
         </horizontal>
-        <horizontal spacing='5.55' >
-          <horizontal pref-width='3'>
-            <label text='15' align='Center'/>
+        <horizontal spacing="2.8" pad-left='4'>
+          <horizontal pref-width='1.5'>
+            <label text='15' align='Center' font-size='3'/>
           </horizontal>
-          <horizontal pref-width='3'>
-            <label text='13' align='Center'/>
+          <horizontal pref-width='1.5'>
+            <label text='14' align='Center' font-size='3' font-color='#e3e3e3' />
           </horizontal>
-          <horizontal pref-width='3'>
-            <label text='11' align='Center'/>
+          <horizontal pref-width='1.5'>
+            <label text='13' align='Center' font-size='3'/>
           </horizontal>
-          <horizontal pref-width='3'>
-            <label text='9' align='Center'/>
+          <horizontal pref-width='1.5'>
+            <label text='12' align='Center' font-size='3' font-color='#e3e3e3'/>
           </horizontal>
-          <horizontal pref-width='3'>
-            <label text='7' align='Center'/>
+          <horizontal pref-width='1.5'>
+            <label text='11' align='Center' font-size='3'/>
           </horizontal>
-          <horizontal pref-width='3'>
-            <label text='5' align='Center'/>
+          <horizontal pref-width='1.5'>
+            <label text='10' align='Center' font-size='3' font-color='#e3e3e3'/>
           </horizontal>
-          <horizontal pref-width='3'>
-            <label text='3' align='Center'/>
+          <horizontal pref-width='1.5'>
+            <label text='9' align='Center' font-size='3'/>
           </horizontal>
-          <horizontal pref-width='3'>
-            <label text='1' align='Center'/>
+          <horizontal pref-width='1.5'>
+            <label text='8' align='Center' font-size='3' font-color='#e3e3e3'/>
+          </horizontal>
+          <horizontal pref-width='1.5'>
+            <label text='7' align='Center' font-size='3'/>
+          </horizontal>
+          <horizontal pref-width='1.5'>
+            <label text='6' align='Center' font-size='3' font-color='#e3e3e3'/>
+          </horizontal>
+          <horizontal pref-width='1.5'>
+            <label text='5' align='Center' font-size='3'/>
+          </horizontal>
+          <horizontal pref-width='1.5'>
+            <label text='4' align='Center' font-size='3' font-color='#e3e3e3'/>
+          </horizontal>
+          <horizontal pref-width='1.5'>
+            <label text='3' align='Center' font-size='3'/>
+          </horizontal>
+          <horizontal pref-width='1.5'>
+            <label text='2' align='Center' font-size='3' font-color='#e3e3e3'/>
+          </horizontal>
+          <horizontal pref-width='1.5'>
+            
           </horizontal>
         </horizontal>
       </vertical>
