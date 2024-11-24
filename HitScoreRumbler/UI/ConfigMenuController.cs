@@ -17,6 +17,8 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Security.Policy;
+using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.XR;
@@ -159,6 +161,14 @@ namespace HitScoreRumbler.UI
         {
             GraphImage.OnClickEvent += GraphClicked;
 
+            //Le Spaghet
+            Task.Run(() => { Thread.Sleep(500); }).ContinueWith((x) => UpdateGrid(), TaskScheduler.FromCurrentSynchronizationContext());
+        }
+
+        private IEnumerator LoadGraphInitialCoroutine()
+        {
+            yield return new WaitForEndOfFrame();
+
             UpdateGrid();
         }
 
@@ -255,6 +265,8 @@ namespace HitScoreRumbler.UI
                 }
 
             }
+
+            Plugin.Log.Error("LOADING IMAGE");
             Texture2D texture = BitmapToTexture2D(bitmap);
             GraphImage.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
         }
