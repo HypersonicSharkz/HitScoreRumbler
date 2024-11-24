@@ -14,7 +14,7 @@ The idea is that rumble will let you know in real time if you are close to the o
 
 | | |
 | -- | -- |
-| Strength | Base strenght of the cut haptics, will be multiplied by the curve |
+| Strength | Base strength of the cut haptics, will be multiplied by the curve |
 | Duration | Duration of the cut haptics |
 
 ## Curve
