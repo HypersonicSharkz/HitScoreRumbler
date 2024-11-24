@@ -2,7 +2,7 @@
 A Beat Saber Mod that changes the cut haptics based on the cut distance to the note center
 
 This mod was originally created for playing poodles.  
-The isea is that the rumble feedback will let you know how close your cut was to the note's center, and can help guide you back to the center of the notes.  
+The idea is that the rumble feedback will let you know how close your cut was to the note's center, and can help guide you back to the center of the notes.  
 
 It can also simply be used as a way to indicate how precise your swings are on top of mods like HitScoreVisualizer.
 
