@@ -165,13 +165,6 @@ namespace HitScoreRumbler.UI
             Task.Run(() => { Thread.Sleep(500); }).ContinueWith((x) => UpdateGrid(), TaskScheduler.FromCurrentSynchronizationContext());
         }
 
-        private IEnumerator LoadGraphInitialCoroutine()
-        {
-            yield return new WaitForEndOfFrame();
-
-            UpdateGrid();
-        }
-
         private void GraphClicked(PointerEventData pointerEventData)
         {
             Vector2 cp = pointerEventData.pointerPressRaycast.screenPosition;
