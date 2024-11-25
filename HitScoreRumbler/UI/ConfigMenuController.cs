@@ -29,7 +29,7 @@ namespace HitScoreRumbler.UI
     internal class ConfigMenuController : IInitializable, INotifyPropertyChanged, IDisposable
     {
         [Inject]
-        private HapticFeedbackController hapticFeedbackController;
+        private HapticFeedbackManager hapticFeedbackController;
 
         private static PluginConfig Config => PluginConfig.Instance;
 

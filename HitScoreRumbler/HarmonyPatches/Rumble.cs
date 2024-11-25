@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace HitScoreRumbler.HarmonyPatches
 {
-    [HarmonyPatch(typeof(NoteCutCoreEffectsSpawner), nameof(NoteCutCoreEffectsSpawner.HandleNoteWasCut))]
+    [HarmonyPatch(typeof(NoteCutCoreEffectsSpawner), "HandleNoteWasCut")]
     internal class CutEffect
     {
         public static float distanceToCenter = 0;
@@ -28,7 +28,7 @@ namespace HitScoreRumbler.HarmonyPatches
     {
         public static readonly HapticPresetSO normalPreset = ScriptableObject.CreateInstance<HapticPresetSO>();
 
-        static bool Prefix(HapticFeedbackController ____hapticFeedbackController, SaberType saberType, NoteCutHapticEffect.Type type)
+        static bool Prefix(HapticFeedbackManager ____hapticFeedbackManager, SaberType saberType, NoteCutHapticEffect.Type type)
         {
             if (!PluginConfig.Instance.Enabled)
                 return true;
@@ -37,7 +37,7 @@ namespace HitScoreRumbler.HarmonyPatches
             normalPreset._strength = Helper.GetStrength(PluginConfig.Instance.LoadedPreset.Points, PluginConfig.Instance.LoadedPreset.StrengthMultiplier, CutEffect.distanceToCenter);
             CutEffect.distanceToCenter = 0;
 
-            ____hapticFeedbackController.PlayHapticFeedback(saberType.Node(), normalPreset);
+            ____hapticFeedbackManager.PlayHapticFeedback(saberType.Node(), normalPreset);
 
             return false;
         }
