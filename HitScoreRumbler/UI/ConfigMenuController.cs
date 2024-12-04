@@ -17,6 +17,8 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Security.Policy;
+using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.XR;
@@ -34,6 +36,10 @@ namespace HitScoreRumbler.UI
         private static PluginConfig Config => PluginConfig.Instance;
 
         public event PropertyChangedEventHandler PropertyChanged;
+
+        private List<PointF> selectedGraph = null;
+
+        private string _selectedGraphName;
 
         #region BSML Fields
 
@@ -62,6 +68,17 @@ namespace HitScoreRumbler.UI
             }
         }
 
+        [UIValue("Frequency")]
+        private float Frequency
+        {
+            get => Config.LoadedPreset.Frequency;
+            set
+            {
+                Config.LoadedPreset.Frequency = value;
+                PresetHelper.SavePreset(Config.LoadedPreset, Config.ChosenPreset);
+            }
+        }
+
         [UIValue("Enabled")]
         private bool Enable
         {
@@ -75,6 +92,35 @@ namespace HitScoreRumbler.UI
         [UIValue("PresetList")]
         private List<object> presets = PresetHelper.GetAllPresets().Cast<object>().ToList();
 
+        [UIValue("list-graphs")]
+        private List<object> graphs = new List<object>() { "Strength", "Duration", "Frequency" };
+
+        [UIValue("displayed-graph")]
+        private string displayedGraph
+        {
+            get
+            {
+                return _selectedGraphName;
+            }
+            set
+            {
+                switch (value)
+                {
+                    case "Strength":
+                        selectedGraph = Config.LoadedPreset.Points;
+                        break;
+                    case "Duration":
+                        selectedGraph = Config.LoadedPreset.PointsDuration;
+                        break;
+                    case "Frequency":
+                        selectedGraph = Config.LoadedPreset.PointsFrequency;
+                        break;
+                }
+
+                _selectedGraphName = value;
+            }
+        }
+
         [UIValue("PresetChoice")]
         private string presetChoice
         {
@@ -87,6 +133,7 @@ namespace HitScoreRumbler.UI
                 NotifyPropertyChanged(nameof(DurationMultiplier));
                 NotifyPropertyChanged(nameof(StrengthMultiplier));
                 NotifyPropertyChanged(nameof(CanRemove));
+
                 UpdateGrid();
             }
         }
@@ -157,11 +204,12 @@ namespace HitScoreRumbler.UI
 
         private void SetUp()
         {
+            selectedGraph = Config.LoadedPreset.Points.OrderBy(pt => pt.X).ToList();
+
             GraphImage.OnClickEvent = GraphClicked;
 
-            UpdateGrid();
-
-            Plugin.Log.Info("HitScore Rumbler Setup");
+            //Le Spaghet
+            Task.Run(() => { Thread.Sleep(500); }).ContinueWith((x) => UpdateGrid(), TaskScheduler.FromCurrentSynchronizationContext());
         }
 
         private void GraphClicked(PointerEventData pointerEventData)
@@ -178,11 +226,11 @@ namespace HitScoreRumbler.UI
 
             bool add = true;
 
-            foreach (PointF vector2 in Config.LoadedPreset.Points)
+            foreach (PointF vector2 in selectedGraph)
             {
                 if (EqualsRound(vector2.X, p.x))
                 {
-                    Config.LoadedPreset.Points.Remove(vector2);
+                    selectedGraph.Remove(vector2);
                     if (EqualsRound(vector2.Y, p.y))
                         add = false;
                     break;
@@ -191,7 +239,7 @@ namespace HitScoreRumbler.UI
 
             if (add)
             {
-                Config.LoadedPreset.Points.Add(new PointF(p.x, p.y));
+                selectedGraph.Add(new PointF(p.x, p.y));
                 PreviewRumble(p);
             }
 
@@ -211,8 +259,6 @@ namespace HitScoreRumbler.UI
 
         private void UpdateGrid()
         {
-            Config.LoadedPreset.Points = Config.LoadedPreset.Points.OrderBy(pt => pt.X).ToList();
-
             //Somehow generate image with those points
 
             // Create a new bitmap with specified width and height
@@ -226,10 +272,10 @@ namespace HitScoreRumbler.UI
                 float circleRadius = 16f;
                 float lineSize = 6f;
 
-                Point[] dots = new Point[Config.LoadedPreset.Points.Count];
+                Point[] dots = new Point[selectedGraph.Count];
                 // Draw circles on the bitmap based on the points
                 int i = 0;
-                foreach (PointF point in Config.LoadedPreset.Points)
+                foreach (PointF point in selectedGraph)
                 {
                     // Calculate the position of the circle's top-left corner
                     int x = (int)(point.X * bitmap.Width - circleRadius);

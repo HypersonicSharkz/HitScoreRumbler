@@ -50,7 +50,15 @@ namespace HitScoreRumbler.Configuration
         public float StrengthMultiplier { get; set; } = 1.2f;
         public float DurationMultiplier { get; set; } = 1f;
 
+        public float Frequency { get; set; } = 0.5f;
+
         [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
-        public List<PointF> Points { get; set; } = new List<PointF>() { new PointF(0, 0), new PointF(1, 1) };
+        public List<PointF> Points { get; set; } = new List<PointF>() { new PointF(0, 1), new PointF(1, 1) };
+
+        [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
+        public List<PointF> PointsDuration { get; set; } = new List<PointF>() { new PointF(0, 1), new PointF(1, 1) };
+
+        [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
+        public List<PointF> PointsFrequency { get; set; } = new List<PointF>() { new PointF(0, 1), new PointF(1, 1) };
     }
 }
