@@ -28,7 +28,7 @@ namespace HitScoreRumbler.HarmonyPatches
     {
         public static readonly HapticPresetSO normalPreset = ScriptableObject.CreateInstance<HapticPresetSO>();
 
-        static bool Prefix(HapticFeedbackManager ____hapticFeedbackManager, SaberType saberType, NoteCutHapticEffect.Type type)
+        static bool Prefix(HapticFeedbackController ____hapticFeedbackController, SaberType saberType, NoteCutHapticEffect.Type type)
         {
             if (!PluginConfig.Instance.Enabled)
                 return true;
@@ -38,7 +38,7 @@ namespace HitScoreRumbler.HarmonyPatches
             normalPreset._frequency = Helper.GetStrength(PluginConfig.Instance.LoadedPreset.PointsFrequency, PluginConfig.Instance.LoadedPreset.Frequency, CutEffect.distanceToCenter);
             CutEffect.distanceToCenter = 0;
 
-            ____hapticFeedbackManager.PlayHapticFeedback(saberType.Node(), normalPreset);
+            ____hapticFeedbackController.PlayHapticFeedback(saberType.Node(), normalPreset);
 
             return false;
         }

@@ -31,7 +31,7 @@ namespace HitScoreRumbler.UI
     internal class ConfigMenuController : IInitializable, INotifyPropertyChanged, IDisposable
     {
         [Inject]
-        private HapticFeedbackManager hapticFeedbackController;
+        private HapticFeedbackController hapticFeedbackController;
 
         private static PluginConfig Config => PluginConfig.Instance;
 
@@ -333,14 +333,14 @@ namespace HitScoreRumbler.UI
 
         public void Initialize()
         {
-            GameplaySetup.Instance.AddTab("Hit Score Rumbler", "HitScoreRumbler.UI.ConfigMenu.bsml", this);
+            GameplaySetup.instance.AddTab("Hit Score Rumbler", "HitScoreRumbler.UI.ConfigMenu.bsml", this);
         }
 
         public void Dispose()
         {
-            if (BeatSaberMarkupLanguage.Settings.BSMLSettings.Instance != null)
+            if (BeatSaberMarkupLanguage.Settings.BSMLSettings.instance != null)
             {
-                BeatSaberMarkupLanguage.Settings.BSMLSettings.Instance.RemoveSettingsMenu(this);
+                BeatSaberMarkupLanguage.Settings.BSMLSettings.instance.RemoveSettingsMenu(this);
             }
         }
     }
