@@ -9,6 +9,7 @@ using HitScoreRumbler.Configuration;
 using HitScoreRumbler.HarmonyPatches;
 using HitScoreRumbler.Utils;
 using HMUI;
+using Libraries.HM.HMLib.VR;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -21,8 +22,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 using UnityEngine.XR;
 using Zenject;
+using static AutoRecord;
 
 namespace HitScoreRumbler.UI
 {
@@ -39,7 +42,11 @@ namespace HitScoreRumbler.UI
 
         private List<PointF> selectedGraph = null;
 
-        private string _selectedGraphName;
+        private string _selectedGraphName = "Strength";
+
+        Pen linePen = new Pen(System.Drawing.Color.Red, 6f);
+        Pen previewPen = new Pen(System.Drawing.Color.Blue, 6f);
+        private int _previewLinePad;
 
         #region BSML Fields
 
@@ -103,7 +110,22 @@ namespace HitScoreRumbler.UI
                 Config.LoadedPreset = preset;
                 NotifyPropertyChanged(nameof(DurationMultiplier));
                 NotifyPropertyChanged(nameof(StrengthMultiplier));
+                NotifyPropertyChanged(nameof(Frequency));
                 NotifyPropertyChanged(nameof(CanRemove));
+
+                switch (displayedGraph)
+                {
+                    case "Strength":
+                        selectedGraph = Config.LoadedPreset.Points;
+                        break;
+                    case "Duration":
+                        selectedGraph = Config.LoadedPreset.PointsDuration;
+                        break;
+                    case "Frequency":
+                        selectedGraph = Config.LoadedPreset.PointsFrequency;
+                        break;
+                }
+
                 UpdateGrid();
             }
         }
@@ -111,8 +133,11 @@ namespace HitScoreRumbler.UI
         [UIComponent("Graph")]
         private ClickableImage GraphImage;
 
+        [UIComponent("PreviewLine")]
+        private LayoutGroup PreviewLine;
+
         [UIValue("list-graphs")]
-        private List<object> graphs = new List<object>() { "Strength", "Duration", "Frequency" };
+        private List<object> graphs = new List<object>() { "Strength", "Duration" };
 
         [UIValue("displayed-graph")]
         private string displayedGraph
@@ -123,20 +148,23 @@ namespace HitScoreRumbler.UI
             }
             set
             {
+                Plugin.Log.Info("Selected Graph: " + value);
                 if (value == _selectedGraphName) return;
 
                 switch (value)
                 {
                     case "Strength":
-                        selectedGraph = Config.LoadedPreset.Points.OrderBy(pt => pt.X).ToList();
+                        selectedGraph = Config.LoadedPreset.Points;
                         break;
                     case "Duration":
-                        selectedGraph = Config.LoadedPreset.PointsDuration.OrderBy(pt => pt.X).ToList();
+                        selectedGraph = Config.LoadedPreset.PointsDuration;
                         break;
                     case "Frequency":
-                        selectedGraph = Config.LoadedPreset.PointsFrequency.OrderBy(pt => pt.X).ToList();
+                        selectedGraph = Config.LoadedPreset.PointsFrequency;
                         break;
                 }
+
+                UpdateGrid();
 
                 _selectedGraphName = value;
             }
@@ -188,6 +216,9 @@ namespace HitScoreRumbler.UI
 
         [UIValue("canRemove")]
         private bool CanRemove => Config.ChosenPreset != "default";
+
+        [UIValue("previewLinePad")]
+        private int previewLinePad => _previewLinePad;
 
         [UIAction("#post-parse")]
         private void PostParse()
@@ -244,6 +275,8 @@ namespace HitScoreRumbler.UI
                 PreviewRumble(p);
             }
 
+            selectedGraph.Sort((x, y) => x.X.CompareTo(y.X));
+
             UpdateGrid();
 
             PresetHelper.SavePreset(Config.LoadedPreset, Config.ChosenPreset);
@@ -251,11 +284,39 @@ namespace HitScoreRumbler.UI
 
         private void PreviewRumble(Vector2 p)
         {
-            Rumble.normalPreset._duration = 0.5f;
-            Rumble.normalPreset._strength = p.y * PluginConfig.Instance.LoadedPreset.StrengthMultiplier;
+            HapticPresetSO so = Helper.GetHapticPreset(p.x * 0.28f + 0.01f);
 
-            hapticFeedbackController.PlayHapticFeedback(XRNode.RightHand, Rumble.normalPreset);
-            hapticFeedbackController.PlayHapticFeedback(XRNode.LeftHand, Rumble.normalPreset);
+            hapticFeedbackController.PlayHapticFeedback(XRNode.RightHand, so);
+            hapticFeedbackController.PlayHapticFeedback(XRNode.LeftHand, so);
+        }
+
+        [UIAction("PreviewRumbleSlide")]
+        private void PreviewRumbleSlide()
+        {
+            Task.Run(() =>
+            {
+                float dist = 0;
+                while (dist <= 1)
+                {
+                    HapticPresetSO so = Helper.GetHapticPreset(dist * 0.28f + 0.01f);
+
+                    hapticFeedbackController.PlayHapticFeedback(XRNode.RightHand, so);
+                    hapticFeedbackController.PlayHapticFeedback(XRNode.LeftHand, so);
+
+                    IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+                    {
+                        PreviewLine.padding.left = (int)(dist * 60f);
+                        LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)PreviewLine.transform);
+                    });
+
+                    dist += 1f/28f;
+
+                    Thread.Sleep((int)(so._duration * 1000 + 200));
+                }
+            }).ContinueWith(x =>
+            {
+                UpdateGrid();
+            }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.FromCurrentSynchronizationContext());
         }
 
         private void UpdateGrid()
@@ -289,20 +350,19 @@ namespace HitScoreRumbler.UI
                 }
                 if (dots.Length > 1)
                 {
-                    g.DrawLines(new Pen(System.Drawing.Color.Red, lineSize), dots);
+                    g.DrawLines(linePen, dots);
 
-                    g.DrawLine(new Pen(System.Drawing.Color.Red, lineSize), dots[0], new Point(0, dots[0].Y));
-                    g.DrawLine(new Pen(System.Drawing.Color.Red, lineSize), dots[dots.Length - 1], new Point(bitmap.Width, dots[dots.Length - 1].Y));
+                    g.DrawLine(linePen, dots[0], new Point(0, dots[0].Y));
+                    g.DrawLine(linePen, dots[dots.Length - 1], new Point(bitmap.Width, dots[dots.Length - 1].Y));
                 }
                 else if (dots.Length == 1)
                 {
-                    g.DrawLine(new Pen(System.Drawing.Color.Red, lineSize), new Point(0, dots[0].Y), new Point(bitmap.Width, dots[0].Y));
+                    g.DrawLine(linePen, new Point(0, dots[0].Y), new Point(bitmap.Width, dots[0].Y));
                 }
                 else
                 {
-                    g.DrawLine(new Pen(System.Drawing.Color.Red, lineSize), new Point(0, (int)lineSize), new Point(bitmap.Width, (int)lineSize));
+                    g.DrawLine(linePen, new Point(0, (int)lineSize), new Point(bitmap.Width, (int)lineSize));
                 }
-
             }
 
             Texture2D texture = BitmapToTexture2D(bitmap);
