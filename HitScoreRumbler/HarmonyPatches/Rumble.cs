@@ -26,19 +26,13 @@ namespace HitScoreRumbler.HarmonyPatches
     [HarmonyPatch(typeof(NoteCutHapticEffect), nameof(NoteCutHapticEffect.HitNote))]
     internal class Rumble
     {
-        public static readonly HapticPresetSO normalPreset = ScriptableObject.CreateInstance<HapticPresetSO>();
-
-        static bool Prefix(HapticFeedbackController ____hapticFeedbackController, SaberType saberType, NoteCutHapticEffect.Type type)
+        static bool Prefix(HapticFeedbackManager ____hapticFeedbackManager, SaberType saberType, NoteCutHapticEffect.Type type)
         {
             if (!PluginConfig.Instance.Enabled)
                 return true;
 
-            normalPreset._duration = 0.14f * Helper.GetStrength(PluginConfig.Instance.LoadedPreset.PointsDuration, PluginConfig.Instance.LoadedPreset.DurationMultiplier, CutEffect.distanceToCenter);
-            normalPreset._strength = Helper.GetStrength(PluginConfig.Instance.LoadedPreset.Points, PluginConfig.Instance.LoadedPreset.StrengthMultiplier, CutEffect.distanceToCenter);
-            normalPreset._frequency = Helper.GetStrength(PluginConfig.Instance.LoadedPreset.PointsFrequency, PluginConfig.Instance.LoadedPreset.Frequency, CutEffect.distanceToCenter);
+            ____hapticFeedbackManager.PlayHapticFeedback(saberType.Node(), Helper.GetHapticPreset(CutEffect.distanceToCenter));
             CutEffect.distanceToCenter = 0;
-
-            ____hapticFeedbackController.PlayHapticFeedback(saberType.Node(), normalPreset);
 
             return false;
         }
