@@ -25,7 +25,6 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using UnityEngine.XR;
 using Zenject;
-using static AutoRecord;
 
 namespace HitScoreRumbler.UI
 {
